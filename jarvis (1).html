@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jarvis</title>
+<style>
+:root{--bg:#000;--tx:#eef1ff;--mu:#8e96bd;--ac:#5aa2ff;--ac2:#8b5cf6;--g:rgba(255,255,255,.05);--gb:rgba(255,255,255,.1);--ok:#4ade80;--card:rgba(255,255,255,.05);--bd:rgba(255,255,255,.1);color-scheme:dark;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:#000}html,body{height:100%;margin:0}
+body{color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden;position:relative}
+body::before{content:"";position:fixed;inset:-20%;z-index:-1;pointer-events:none;background:radial-gradient(40% 35% at 20% 25%,rgba(77,120,255,.22),transparent 70%),radial-gradient(35% 30% at 80% 70%,rgba(140,80,255,.18),transparent 70%),radial-gradient(30% 25% at 60% 12%,rgba(40,220,255,.12),transparent 70%);animation:drift 18s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate3d(4%,3%,0) rotate(6deg) scale(1.08)}}
+@keyframes fd{from{opacity:0;transform:translateY(-12px)}}
+@keyframes fu{from{opacity:0;transform:translateY(24px)}}
+@keyframes up{from{opacity:0;transform:translateY(8px)}}
+.top{display:flex;align-items:center;padding:12px 14px 0;gap:10px;animation:fd .7s both}
+.now{flex:1;background:var(--g);border:1px solid var(--gb);border-radius:18px;padding:9px 14px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);min-width:0}
+.now b{font-size:14px;letter-spacing:.4px;background:linear-gradient(90deg,#fff,#a5c8ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.mu{color:var(--mu);font-size:12.5px}
+.ib{background:var(--g);border:1px solid var(--gb);color:var(--tx);border-radius:16px;width:46px;height:46px;font-size:19px;flex:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .15s,background .2s}
+.ib:active{transform:scale(.9)}
+label.ib{display:flex;align-items:center;justify-content:center}
+.vh{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+#banner{display:none;background:rgba(250,204,21,.1);border:1px solid rgba(250,204,21,.3);border-radius:16px;margin:8px 14px 0;padding:10px 14px;font-size:14px;animation:fd .4s both}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;padding:0 16px}
+#vid{display:none;width:min(92%,420px);max-height:30vh;object-fit:cover;border-radius:20px;border:1px solid var(--gb);margin-bottom:6px}
+#orb{display:block;max-width:100%;animation:fu 1s both;cursor:pointer}
+#st{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:99px;background:var(--g);border:1px solid var(--gb);color:var(--mu);font-size:11px;letter-spacing:2.5px;text-transform:uppercase}
+#st::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c,#5aa2ff);box-shadow:0 0 10px var(--c,#5aa2ff);animation:pl 1.4s infinite}
+body[data-s=listen]{--c:#4ade80}body[data-s=think]{--c:#a78bfa}body[data-s=speak]{--c:#38e1ff}
+@keyframes pl{50%{opacity:.35;transform:scale(.7)}}
+#you{color:var(--mu);font-size:14px;margin-top:12px;text-align:center;max-height:42px;overflow:hidden;font-style:italic}
+#cap{margin-top:8px;max-height:24vh;overflow-y:auto;text-align:center;font-size:18px;line-height:1.5;color:#f4f6ff;white-space:pre-wrap;width:100%;max-width:560px}
+.pop{animation:up .4s both}
+.bar{margin:0 12px 12px;padding:12px;border-radius:28px;background:rgba(255,255,255,.05);border:1px solid var(--gb);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);display:flex;flex-direction:column;gap:10px;animation:fu .8s both}
+.bar .r{display:flex;gap:8px;align-items:center}
+.bar input{flex:1;min-width:0}
+input,select,textarea{font:inherit;color:var(--tx);background:rgba(255,255,255,.06);border:1px solid var(--gb);border-radius:16px;padding:11px 14px;width:100%;outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(90,162,255,.2)}
+textarea{min-height:100px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+#mic{width:100%;height:60px;border-radius:30px;border:1px solid var(--gb);background:rgba(255,255,255,.06);color:var(--tx);font:600 15px system-ui,sans-serif;touch-action:manipulation;user-select:none;-webkit-user-select:none;transition:transform .15s,background .3s}
+#mic:active{transform:scale(.97)}
+#mic.rec{background:linear-gradient(135deg,#16c172,#06b6d4);color:#02150c;border-color:transparent;animation:ring 1.8s infinite}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(34,211,160,.45)}100%{box-shadow:0 0 0 24px rgba(34,211,160,0)}}
+.btn{padding:11px 16px;border-radius:16px;border:0;background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;font:inherit;font-weight:600;transition:transform .15s}
+.btn:active{transform:scale(.95)}
+.btn.g{background:var(--g);color:var(--tx);border:1px solid var(--gb);font-weight:400}
+#sheet{display:flex;position:fixed;inset:0;z-index:5;flex-direction:column;background:rgba(4,5,12,.94);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);transform:translateY(100%);visibility:hidden;transition:transform .4s cubic-bezier(.2,.8,.2,1),visibility 0s .4s}
+#sheet.on{transform:none;visibility:visible;transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+nav{display:flex;gap:6px;padding:12px 14px 8px}
+nav button{flex:1;padding:10px 4px;border-radius:14px;border:1px solid var(--gb);background:var(--g);color:var(--tx);font-size:14px;transition:all .2s}
+nav button.on{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;border-color:transparent}
+main{flex:1;overflow-y:auto;padding:4px 14px 24px}
+.tab{display:none}.tab.on{display:block;animation:up .35s both}
+.row{display:flex;gap:8px;margin:8px 0}
+.blk,.ch{background:var(--g);border:1px solid var(--gb);border-radius:16px;padding:12px 14px;margin-bottom:8px}
+.blk{display:flex;justify-content:space-between;gap:10px}
+.blk.cur{border-color:var(--ac);animation:glow 2s infinite}
+@keyframes glow{50%{box-shadow:0 0 18px rgba(90,162,255,.45)}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{padding:6px 12px;border-radius:99px;border:1px solid var(--gb);background:transparent;color:var(--mu);font-size:13px;transition:all .2s}
+.chip.d{background:var(--ok);border-color:var(--ok);color:#022c10}
+label{display:block;margin:14px 0 5px;font-size:13px;color:var(--mu)}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="now"><b id="nowT">…</b><div class="mu" id="nowS"></div></div>
+  <button class="ib" id="menu" aria-label="Menu">☰</button>
+</div>
+<div id="banner"></div>
+<div class="stage">
+  <video id="vid" playsinline muted></video>
+  <canvas id="orb"></canvas>
+  <div id="st">ready</div>
+  <div id="you"></div>
+  <div id="cap">Neeche Mic ON karo, phir bas bolo. Jab tum ruk jaoge, main khud samajh ke jawab dunga. 📷 se copy dikhao.</div>
+</div>
+<div class="bar">
+  <div class="r"><label class="ib" id="cam" for="file" aria-label="Camera">📷</label><label class="ib" for="file2" aria-label="Gallery">🖼</label><input id="txt" placeholder="Ya yahan type karo…"><button class="ib" id="go" aria-label="Send">➤</button></div>
+  <button id="mic">🔇 Mic muted (tap = unmute)</button>
+</div>
+<input type="file" id="file" class="vh" accept="image/*" capture="environment"><input type="file" id="file2" class="vh" accept="image/*">
+
+<div id="sheet">
+  <nav><button data-t="plan" class="on">Plan</button><button data-t="chap">Chapters</button><button data-t="set">Settings</button><button id="close">✕</button></nav>
+  <main>
+    <section id="plan" class="tab on"><div id="blocks"></div></section>
+    <section id="chap" class="tab">
+      <div class="row"><input id="cn" placeholder="Chapter name"><select id="cs" style="width:auto"><option value="M">Maths</option><option value="P">Physics</option><option value="C">Chemistry</option></select></div>
+      <button class="btn" id="addC" style="width:100%">Add chapter</button>
+      <p class="mu">Tap a stage when you finish it.</p><div id="chs"></div>
+    </section>
+    <section id="set" class="tab">
+      <label>Coaching days (Mon, Tue, Wed, Fri)</label><textarea id="tc"></textarea>
+      <label>Free days (Thu, Sat, Sun)</label><textarea id="tf"></textarea>
+      <p class="mu">One block per line, 24-hour time, like 17:30-19:30 Study.</p>
+      <label>Today is a…</label><select id="ov"><option value="auto">Auto (by weekday)</option><option value="c">Coaching day</option><option value="f">Free day</option></select>
+      <label>Voice (same voice for Hindi, English and Hinglish)</label><select id="vc"></select>
+      <label>Awaaz ki bhaari-pan (pitch)</label><input type="range" id="pt" min="0.4" max="1.2" step="0.05"><label>Speed</label><input type="range" id="rt" min="0.7" max="1.2" step="0.05"><div class="row"><button class="btn g" id="test">Test voice</button><button class="btn g" id="snd"></button></div><div class="row"><button class="btn g" id="bi"></button></div>
+      <label>Mic language</label><select id="lg"><option value="en-IN">English / Hinglish</option><option value="hi-IN">हिन्दी</option></select>
+      <label>Jarvis’s style</label><select id="ps"><option>a strict boss who does not accept excuses</option><option>a calm, supportive mentor</option><option>a high-energy hype coach</option></select>
+      <div class="row"><button class="btn" id="save">Save</button><button class="btn g" id="notif">Enable notifications</button></div>
+      <p class="mu">Reminders work while this app is open.</p>
+    </section>
+  </main>
+</div>
+<script>
+const STAGES={M:["Lectures","Module","PYQs","Cengage"],P:["Lectures","Module","Physics Galaxy"],C:["Lectures","Module","Reference book"]};
+const SN={M:"Maths",P:"Physics",C:"Chemistry"};
+const DEF={tc:"08:30-15:30 Coaching\n17:30-19:30 Study\n20:30-22:30 Study",
+ tf:"08:30-10:00 Wake up and get ready\n10:00-12:00 Study 1\n13:00-15:00 Study 2\n17:00-19:00 Study 3\n21:00-23:00 Study 4",
+ ov:"auto",lg:"en-IN",ps:"a strict boss who does not accept excuses",chs:[],snd:true,vc:""};
+let S=Object.assign({},DEF);
+try{const r=localStorage.getItem("jarvis1");if(r)S=Object.assign({},DEF,JSON.parse(r))}catch(e){}
+const $=id=>document.getElementById(id);
+const store=()=>{try{localStorage.setItem("jarvis1",JSON.stringify(S))}catch(e){}};
+
+/* ---------- timetable ---------- */
+const parse=t=>t.split("\n").map(l=>l.trim().match(/^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})\s+(.+)$/)).filter(Boolean).map(m=>({s:+m[1]*60+ +m[2],e:+m[3]*60+ +m[4],label:m[5]}));
+const isCoaching=()=>S.ov==="c"?true:S.ov==="f"?false:[1,2,3,5].includes(new Date().getDay());
+const today=()=>parse(isCoaching()?S.tc:S.tf);
+const hm=m=>String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+const nowMin=()=>{const d=new Date();return d.getHours()*60+d.getMinutes()};
+function cur(){const m=nowMin(),b=today();return{c:b.find(x=>x.s<=m&&m<x.e),n:b.find(x=>x.s>m)}}
+function renderNow(){
+ const{c,n}=cur(),m=nowMin();
+ $("nowT").textContent=c?"Now: "+c.label:"Free time";
+ $("nowS").textContent=(c?"until "+hm(c.e):"")+(n?(c?" · ":"")+"next: "+n.label+" "+hm(n.s):"");
+ $("blocks").innerHTML="";
+ today().forEach(b=>{const d=document.createElement("div");d.className="blk"+(b.s<=m&&m<b.e?" cur":"");
+  const a=document.createElement("span");a.textContent=b.label;const t=document.createElement("span");t.className="mu";t.textContent=hm(b.s)+"–"+hm(b.e);d.append(a,t);$("blocks").appendChild(d)});
+}
+function chapStatus(){
+ if(!S.chs.length)return"No chapters added yet.";
+ return S.chs.map(c=>{const st=STAGES[c.s];return`${c.n} (${SN[c.s]}): done [${st.filter((_,i)=>c.d[i]).join(", ")||"nothing"}], next: ${st.find((_,i)=>!c.d[i])||"fully complete"}`}).join("\n")}
+function renderChaps(){
+ $("chs").innerHTML="";
+ S.chs.forEach((c,i)=>{const d=document.createElement("div");d.className="ch";
+  const h=document.createElement("div");h.style.cssText="display:flex;justify-content:space-between";
+  const t=document.createElement("b");t.textContent=c.n+" · "+SN[c.s];
+  const x=document.createElement("button");x.className="chip";x.textContent="✕";x.onclick=()=>{S.chs.splice(i,1);store();renderChaps()};h.append(t,x);
+  const ch=document.createElement("div");ch.className="chips";
+  STAGES[c.s].forEach((s,j)=>{const b=document.createElement("button");b.className="chip"+(c.d[j]?" d":"");b.textContent=s;b.onclick=()=>{c.d[j]=!c.d[j];store();renderChaps()};ch.appendChild(b)});
+  d.append(h,ch);$("chs").appendChild(d)});
+}
+
+/* ---------- orb ---------- */
+const cv=$("orb"),g=cv.getContext("2d");let W=300,state="idle",bump=0,amp=0,camOn=false;
+const COL={idle:"77,163,255",listen:"74,222,128",think:"167,139,250",speak:"56,225,255"};
+function fit(){const s=Math.min(innerWidth*.8,innerHeight*(camOn?.2:.38),340),d=devicePixelRatio||1;W=s;cv.style.width=cv.style.height=s+"px";cv.width=cv.height=s*d;g.setTransform(d,0,0,d,0,0)}
+function setState(s,label){if(s==="idle"&&typeof live!=="undefined"&&live)s="listen";state=s;document.body.dataset.s=s;$("st").textContent=label||({idle:"ready",listen:"listening",think:"thinking",speak:"speaking"})[s]}
+let cc=[88,150,255];const TC={idle:[88,150,255],listen:[74,222,128],think:[167,139,250],speak:[56,225,255]};
+const PT=Array.from({length:48},()=>({a:Math.random()*6.283,r:1.45+Math.random()*1.0,v:(.0005+Math.random()*.0012)*(Math.random()<.5?-1:1),z:Math.random()*1.3+.5}));
+function frame(t){
+ g.clearRect(0,0,W,W);const c=W/2,R=W*.22,tg=TC[state];
+ for(let i=0;i<3;i++)cc[i]+=(tg[i]-cc[i])*.06;const col=cc.map(Math.round).join(",");
+ let target=state==="speak"?.3+.25*Math.abs(Math.sin(t/140))+bump*.5:state==="listen"?.18+.12*Math.abs(Math.sin(t/230)):state==="think"?.1:.04+.03*Math.sin(t/900);
+ bump*=.9;amp+=(target-amp)*.18;
+ const gl=g.createRadialGradient(c,c,R*.3,c,c,R*(2.4+amp*1.2));gl.addColorStop(0,`rgba(${col},.42)`);gl.addColorStop(1,`rgba(${col},0)`);g.fillStyle=gl;g.fillRect(0,0,W,W);
+ PT.forEach(p=>{p.a+=p.v*(1+amp*7);const rr=R*(p.r+amp*.2);g.fillStyle=`rgba(${col},${.25+.5*Math.abs(Math.sin(t/900+p.a*3))})`;g.beginPath();g.arc(c+Math.cos(p.a)*rr,c+Math.sin(p.a)*rr*.94,p.z*W/320,0,7);g.fill()});
+ g.lineWidth=1;g.strokeStyle=`rgba(${col},.22)`;g.beginPath();g.arc(c,c,R*1.62,0,7);g.stroke();
+ g.save();g.translate(c,c);g.rotate(t/(state==="think"?450:4500));g.setLineDash([3,11]);g.strokeStyle=`rgba(${col},.45)`;g.beginPath();g.arc(0,0,R*1.42,0,7);g.stroke();g.restore();
+ const N=72;g.lineCap="round";g.lineWidth=Math.max(2,W*.009);g.strokeStyle=`rgba(${col},.9)`;
+ for(let i=0;i<N;i++){const a=i/N*6.2832+(state==="think"?t/700:0);
+  const w=state==="think"?(Math.sin(a*2-t/200)+1)/4:Math.abs(Math.sin(i*.7+t/(state==="speak"?90:200))*Math.cos(i*.31+t/310));
+  const L=R*.08+R*(state==="idle"?.12:.85)*amp*(.4+w)*1.2,r0=R*1.14;
+  g.beginPath();g.moveTo(c+Math.cos(a)*r0,c+Math.sin(a)*r0);g.lineTo(c+Math.cos(a)*(r0+L),c+Math.sin(a)*(r0+L));g.stroke()}
+ const rr=R*(1+amp*.22),cg=g.createRadialGradient(c-rr*.35,c-rr*.4,rr*.05,c,c,rr);cg.addColorStop(0,`rgba(255,255,255,.95)`);cg.addColorStop(.25,`rgba(${col},1)`);cg.addColorStop(1,`rgba(${col},.2)`);
+ g.fillStyle=cg;g.beginPath();g.arc(c,c,rr,0,7);g.fill();
+ g.strokeStyle=`rgba(255,255,255,.25)`;g.lineWidth=1.2;g.beginPath();g.arc(c,c,rr*.82,.3,2.2);g.stroke();
+ requestAnimationFrame(frame)}
+fit();addEventListener("resize",fit);requestAnimationFrame(frame);
+
+/* ---------- voice out (one voice for every language) ---------- */
+let voices=[];
+function pickVoice(){
+ const all=speechSynthesis.getVoices();if(S.vc){const v=all.find(v=>v.name===S.vc);if(v)return v}
+ const score=v=>(/hi[-_]IN/i.test(v.lang)?10:/en[-_]IN/i.test(v.lang)?6:0)+(/google|neural|natural|online/i.test(v.name)?3:0)+(/\bmale\b|madhur|hemant|prabhat|ravi|rishi|hid\b|david|mark|guy/i.test(v.name)&&!/female/i.test(v.name)?6:0)-(/female|swara|kalpana|neerja|aditi|lekha|veena|hia\b|hic\b|zira|priya/i.test(v.name)?8:0);
+ return all.slice().sort((a,b)=>score(b)-score(a))[0]}
+function loadVoices(){try{voices=speechSynthesis.getVoices();const s=$("vc");s.innerHTML="";
+ const a=document.createElement("option");a.value="";a.textContent="Auto (best available)";s.appendChild(a);
+ voices.filter(v=>/^(hi|en)/i.test(v.lang)).forEach(v=>{const o=document.createElement("option");o.value=v.name;o.textContent=v.name+" ("+v.lang+")";s.appendChild(o)});s.value=S.vc}catch(e){}}
+try{speechSynthesis.onvoiceschanged=loadVoices;loadVoices()}catch(e){}
+function speak(t){curSpeech=t;
+ if(!S.snd||!window.speechSynthesis){setState("idle");return}
+ try{speechSynthesis.cancel();const v=pickVoice();
+  const parts=t.replace(/[*_#`]/g,"").split(/(?<=[.!?।])\s+/).filter(x=>x.trim());let left=parts.length;
+  parts.forEach(p=>{const u=new SpeechSynthesisUtterance(p);if(v){u.voice=v;u.lang=v.lang}else u.lang="hi-IN";
+   const ex=/!/.test(p),q=/\?/.test(p),sh=p.length<30,j=(Math.random()-.5)*.06;u.rate=Math.max(.6,Math.min(1.3,(S.rt||.95)*(ex?1.07:sh?.93:1)+j));u.pitch=Math.max(.3,Math.min(1.5,(S.pt||.75)+(ex?.1:0)+(q?.14:0)+(sh?-.03:0)+j));u.onstart=()=>setState("speak");u.onboundary=()=>{bump=1};u.onerror=u.onend=()=>{if(--left<=0){quiet=Date.now()+1200;setState("idle")}};speechSynthesis.speak(u)})
+ }catch(e){setState("idle")}}
+
+/* ---------- brain ---------- */
+const hist=[];let samp=null,busy=false,canImg=false;
+function ctx(){
+ const{c,n}=cur();
+ return`You are JARVIS, the personal study boss and expert tutor of a Class 11 JEE 2028 (Main + Advanced) aspirant in India. Be ${S.ps}. You know the complete JEE Main and Advanced syllabus for Physics, Chemistry and Mathematics (NCERT 11 and 12 plus Advanced depth), typical PYQ patterns and chapter weightage. Solve problems accurately, check your arithmetic, and say so if unsure.
+STUDY BOSS: decide what they study and when; give ONE concrete next action, not a menu. Until 1 Jan 2027 coaching assignments and mock deadlines decide topics, so split each study block between the ongoing coaching chapter and old-chapter revision; from Jan 2027 they restart the full syllabus over about 4 months. Chapters go through stages in order. Never invent chapter progress.
+LANGUAGE: never use Devanagari script. If the student speaks English, reply in English. If they speak Hindi or Hinglish (even if their words arrive in Devanagari), reply in natural, casual Hinglish written in Roman letters, like a friend from India, never stiff textbook Hindi.
+TONE: sound like a confident, warm elder brother (bhaiya) with real emotion: energy and exclamation marks when praising, calm firmness when pushing, short punchy sentences, a little humour.
+FORMAT: your reply is spoken aloud, so plain sentences only, no markdown, no lists, no emojis, no LaTeX (write x squared, root of 5, 3 by 4). Normal chat: 1-3 short sentences. For solving a question: short step-by-step in at most 8 sentences, ending with the final answer clearly.
+Now: ${new Date().toDateString()} ${hm(nowMin())}. ${isCoaching()?"Coaching day":"Free day"}. Current block: ${c?c.label+" until "+hm(c.e):"none"}. Next: ${n?n.label+" at "+hm(n.s):"none"}.
+Today's blocks: ${today().map(b=>hm(b.s)+"-"+hm(b.e)+" "+b.label).join("; ")}.
+Chapter progress:
+${chapStatus()}`}
+async function send(text,img){
+ if(!img&&camOn&&!busy)img=await grab();text=(text||"").trim();if((!text&&!img)||busy)return;$("txt").value="";
+ try{speechSynthesis.cancel()}catch(e){}
+ $("you").textContent=(img?"📷 ":"")+text;$("cap").textContent="";
+ hist.push({role:"user",content:(img?"[sent a photo] ":"")+text});busy=true;setState("think");
+ try{
+  if(!samp&&window.claude&&claude.use){samp=await claude.use("sample");try{canImg=!!(await samp.limits()).images}catch(e){}}
+  if(!samp){$("cap").textContent="AI isn’t available in this view. Open Jarvis from your claude.ai link.";setState("idle");busy=false;return}
+  if(img&&!canImg){$("cap").textContent="Photos aren’t supported in this view yet. Type the question instead.";setState("idle");busy=false;return}
+  const convo=hist.slice(-8).map(m=>(m.role==="user"?"Student: ":"Jarvis: ")+m.content).join("\n");
+  const task=img?"\n\nThe student attached a photo of their notebook or book. Read it carefully (English or Hindi, handwriting, diagrams). If it is a question, solve it. If it is notes, give the key points and point out any mistakes. "+(text?"Student also said: "+text:""):"";
+  const r=await samp(ctx()+"\n\nConversation:\n"+convo+task+"\n\nWrite Jarvis’s next reply only.",
+   Object.assign({cache:false,modelTier:img?"complex":"default",onText:({text})=>{$("cap").textContent=text}},img?{images:[img]}:{}));
+  $("cap").textContent=r.text;hist.push({role:"assistant",content:r.text});speak(r.text);
+ }catch(e){$("cap").textContent=e&&e.code==="not_granted"?"Please allow Jarvis to use Claude, then try again.":"Something went wrong. Try again in a moment.";setState("idle")}
+ busy=false}
+
+/* ---------- camera ---------- */
+let stream=null;
+function grab(){return new Promise(res=>{const v=$("vid");if(!camOn||!v.videoWidth)return res(null);const k=Math.min(1,1400/Math.max(v.videoWidth,v.videoHeight)),c=document.createElement("canvas");c.width=v.videoWidth*k;c.height=v.videoHeight*k;c.getContext("2d").drawImage(v,0,0,c.width,c.height);c.toBlob(res,"image/jpeg",.85)})}
+function camStop(){if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;camOn=false;$("vid").style.display="none";$("vid").srcObject=null;$("cam").style.background="";fit()}
+$("cam").onclick=async()=>{
+ if(camOn){camStop();return}
+ try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
+  const v=$("vid");v.srcObject=stream;await v.play();v.style.display="block";camOn=true;$("cam").style.background="var(--ok)";fit();
+  $("cap").textContent="Camera on hai. Copy dikhao, phir mic dabake bolo, ya video par tap karo."}
+ catch(e){camStop();$("cap").textContent="Is view mein live camera allowed nahi hai, isliye photo wala camera khol raha hoon.";$("file").click()}};
+$("vid").onclick=async()=>send("Isme jo question ya notes likhe hain, unhe padho aur jawab do.",await grab());
+$("file").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
+ try{const b=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1400/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);c.toBlob(res,"image/jpeg",.85)};im.onerror=rej;im.src=URL.createObjectURL(f)});
+  send($("txt").value,b)}catch(err){$("cap").textContent="Couldn’t read that photo. Try again."}};
+
+/* ---------- mic: always listening, with mute ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let dict=null,rec=null,live=false,pend="",silT=null,quiet=0,curSpeech="";
+const norm=t=>t.toLowerCase().replace(/[^a-z0-9\u0900-\u097F ]/g," ").split(/\s+/).filter(Boolean);
+function echoLike(t){if(/\b(ruko|ruk|stop|bas|wait|suno|ek minute)\b/i.test(t))return false;const w=norm(t),sp=new Set(norm(curSpeech));if(w.length<2)return true;let m=0;w.forEach(x=>{if(sp.has(x))m++});return m/w.length>=.4}
+function interrupt(){try{speechSynthesis.cancel()}catch(_){}quiet=0;setState("listen")}
+function tryBarge(t){if(!live||S.bi===false||echoLike(t))return;interrupt()}
+const biT=()=>{$("bi").textContent=S.bi===false?"✋ Interrupt: OFF":"✋ Interrupt: ON"};
+$("bi").onclick=()=>{S.bi=S.bi===false;biT();store()};
+function setLive(on){live=on;const b=$("mic");b.classList.toggle("rec",on);
+ b.textContent=on?"🎙 Mic ON · sun raha hoon (tap = mute)":"🔇 Mic muted (tap = unmute)";
+ if(on){if(state==="idle")setState("listen")}else{if(state==="listen")setState("idle");pend="";clearTimeout(silT);$("you").textContent=""}}
+function heard(t){t=(t||"").trim();if(!t||!live)return;
+ const sp=state==="speak"||Date.now()<quiet;
+ if(sp){if(S.bi===false||echoLike(t))return;interrupt()}else if(busy||state==="think")return;
+ pend+=(pend?" ":"")+t;$("you").textContent=pend;clearTimeout(silT);
+ silT=setTimeout(()=>{const x=pend;pend="";if(x)send(x)},1500)}
+(async()=>{try{if(window.claude&&claude.use){dict=await claude.use("dictation");if(dict){
+ dict.onFinal(({text})=>heard(text));if(dict.onPartial)dict.onPartial(({text})=>{if(state==="speak")tryBarge(text)});
+ dict.onState(({state:st})=>{if(st!=="listening"&&live)setTimeout(()=>{if(live&&dict)dict.start().catch(()=>{setLive(false);$("cap").textContent="Mic ruk gaya. Tap karke dobara ON karo."})},300)})}}}catch(e){}})();
+function startSR(){
+ if(!SR){$("cap").textContent="Is view mein mic available nahi hai. Type karo.";return}
+ setLive(true);const r=new SR();r.lang=S.lg;r.continuous=true;r.interimResults=false;
+ r.onresult=ev=>{for(let k=ev.resultIndex;k<ev.results.length;k++)if(ev.results[k].isFinal)heard(ev.results[k][0].transcript)};
+ r.onerror=ev=>{if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){rec=null;setLive(false);$("cap").textContent="Mic ki permission allow karo."}};
+ r.onend=()=>{if(rec===r&&live){try{r.start()}catch(_){}}};
+ rec=r;try{r.start()}catch(_){rec=null;setLive(false)}}
+function startLive(){
+ if(dict){setLive(true);dict.start().catch(e=>{setLive(false);$("cap").textContent=e&&e.code==="not_granted"?"Mic ki permission allow karo.":"Mic start nahi hua. Dobara tap karo."});return}
+ startSR()}
+function stopLive(){setLive(false);if(rec){const r=rec;rec=null;try{r.stop()}catch(_){}}if(dict){try{const p=dict.stop();if(p&&p.catch)p.catch(()=>{})}catch(_){}}}
+$("mic").onclick=()=>{try{navigator.vibrate(15)}catch(_){}if(live)stopLive();else startLive()};
+$("orb").onclick=()=>{try{speechSynthesis.cancel()}catch(_){}if(state==="speak")setState("idle")};
+$("go").onclick=()=>send($("txt").value);
+$("txt").onkeydown=e=>{if(e.key==="Enter")send($("txt").value)};
+$("cam").onclick=null;$("file2").onchange=$("file").onchange;
+setLive(false);
+{const cp=$("cap");let pl=0;new MutationObserver(()=>{const l=cp.textContent.length;if(l<pl||pl===0){cp.classList.remove("pop");void cp.offsetWidth;cp.classList.add("pop")}pl=l}).observe(cp,{childList:true,characterData:true,subtree:true})}
+
+/* ---------- reminders ---------- */
+const NUDGES=["Ek ghanta ho gaya. Paani piyo, 2 minute stretch karo, phir wapas focus.","Phone neeche rakho. Ye ghanta tumhare IIT ke liye hai.","Chhote steps, roz. Aaj ka block poora karo.","Ruko mat. Jo aaj kar loge wahi rank mein dikhega.","Tum thake nahi ho, bas distract ho. Wapas aao."];
+let fired="";
+function remind(c){const msg=c.label+" chal raha hai. "+NUDGES[Math.floor(Math.random()*NUDGES.length)];
+ const b=$("banner");b.style.display="block";b.textContent="⏰ "+msg;b.onclick=()=>b.style.display="none";
+ if(!busy){$("cap").textContent=msg;speak(msg)}
+ try{if(window.Notification&&Notification.permission==="granted")new Notification("Jarvis",{body:msg})}catch(e){}}
+setInterval(()=>{renderNow();const{c}=cur();if(!c||!/study/i.test(c.label))return;
+ const m=nowMin(),k=c.s+":"+Math.floor((m-c.s)/60)+":"+new Date().toDateString();if((m-c.s)%60===0&&fired!==k){fired=k;remind(c)}},20000);
+
+/* ---------- menu ---------- */
+$("menu").onclick=()=>{renderNow();$("sheet").classList.add("on")};$("close").onclick=()=>$("sheet").classList.remove("on");
+document.querySelectorAll("nav button[data-t]").forEach(b=>b.onclick=()=>{
+ document.querySelectorAll("nav button[data-t]").forEach(x=>x.classList.toggle("on",x===b));
+ document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.id===b.dataset.t))});
+$("addC").onclick=()=>{const n=$("cn").value.trim();if(!n)return;const s=$("cs").value;S.chs.push({n,s,d:STAGES[s].map(()=>false)});$("cn").value="";store();renderChaps()};
+const sndT=()=>$("snd").textContent=S.snd?"🔊 Voice on":"🔇 Voice off";
+$("snd").onclick=()=>{S.snd=!S.snd;sndT();if(!S.snd)try{speechSynthesis.cancel()}catch(e){}store()};
+$("test").onclick=()=>{S.vc=$("vc").value;S.pt=+$("pt").value;S.rt=+$("rt").value;speak("Namaste! Main Jarvis hoon. Chalo, padhai shuru karte hain. Let us start studying.")};
+$("save").onclick=()=>{S.tc=$("tc").value;S.tf=$("tf").value;S.ov=$("ov").value;S.lg=$("lg").value;S.ps=$("ps").value;S.vc=$("vc").value;S.pt=+$("pt").value;S.rt=+$("rt").value;store();renderNow();$("sheet").classList.remove("on");$("cap").textContent="Saved."};
+$("notif").onclick=()=>{try{Notification.requestPermission()}catch(e){}};
+$("tc").value=S.tc;$("tf").value=S.tf;$("ov").value=S.ov;$("lg").value=S.lg;$("ps").value=S.ps;$("pt").value=S.pt||.75;$("rt").value=S.rt||.95;sndT();biT();
+renderNow();renderChaps();
+</script>
+</body>
+</html>
